@@ -24,6 +24,7 @@
             width: 100%;
             border: 2px solid #333;
             border-radius: 8px;
+            transform: scaleX(-1); /* Default to mirror effect */
         }
         .overlay {
             position: absolute;
@@ -62,8 +63,8 @@
         .crosshair {
             position: absolute;
             top: 95%;
-            left: 97%;
-            transorm: translate(-50%, -50%);
+            left: 100%;
+            transform: translate(-50%, -50%);
         }
         .crosshair-x {
             position: relative;
@@ -89,6 +90,21 @@
             left: 50%;
             transform: translateX(-50%) rotate(-45deg);
         }
+        #camera-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 5px;
+            padding: 5px;
+        }
+        #camera-controls select {
+            background: #222;
+            color: #fff;
+            border: none;
+            padding: 5px;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
@@ -103,29 +119,71 @@
         <div class="overlay crosshair">
             <div class="crosshair-x"></div>
         </div>
+        <div id="camera-controls">
+            <label for="camera-select">Select Camera:</label>
+            <select id="camera-select"></select>
+        </div>
     </div>
 
     <script>
         const video = document.getElementById('video');
-        const constraints = {
-            video: {
-                width: 1280,
-                height: 720,
-            }
-        };
+        const cameraSelect = document.getElementById('camera-select');
+        let currentStream = null;
 
-        // Start the video stream from the camera
-        async function startCamera() {
+        async function startCamera(deviceId = null) {
+            const constraints = {
+                video: {
+                    facingMode: deviceId ? undefined : 'user',
+                    deviceId: deviceId ? { exact: deviceId } : undefined,
+                    width: 1280,
+                    height: 720
+                }
+            };
+
             try {
+                // Stop the current stream if it exists
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                }
+
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = stream;
+                currentStream = stream;
             } catch (error) {
                 console.error('Error accessing the camera', error);
             }
         }
 
-        // Initialize the camera when the page loads
-        window.addEventListener('load', startCamera);
+        async function setupCameraSelect() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+
+                videoDevices.forEach(device => {
+                    const option = document.createElement('option');
+                    option.value = device.deviceId;
+                    option.textContent = device.label || `Camera ${cameraSelect.options.length + 1}`;
+                    cameraSelect.appendChild(option);
+                });
+
+                cameraSelect.addEventListener('change', (event) => {
+                    const deviceId = event.target.value;
+                    startCamera(deviceId);
+                });
+
+                if (videoDevices.length > 0) {
+                    cameraSelect.value = videoDevices[0].deviceId;
+                    startCamera(videoDevices[0].deviceId);
+                } else {
+                    startCamera();
+                }
+            } catch (error) {
+                console.error('Error setting up camera select', error);
+            }
+        }
+
+        // Initialize the camera and camera select dropdown when the page loads
+        window.addEventListener('load', setupCameraSelect);
     </script>
 </body>
 </html>
