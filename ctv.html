@@ -24,7 +24,6 @@
             width: 100%;
             border: 2px solid #333;
             border-radius: 8px;
-            transform: scaleX(-1); /* Default to mirror effect */
         }
         .overlay {
             position: absolute;
@@ -63,7 +62,7 @@
         .crosshair {
             position: absolute;
             top: 95%;
-            left: 100%;
+            left: 95%;
             transform: translate(-50%, -50%);
         }
         .crosshair-x {
@@ -149,6 +148,15 @@
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = stream;
                 currentStream = stream;
+                
+                // Ensure no mirror effect is applied
+                const videoTracks = stream.getVideoTracks();
+                if (videoTracks.length > 0) {
+                    const capabilities = videoTracks[0].getCapabilities();
+                    if (capabilities.facingMode) {
+                        video.style.transform = ''; // Remove any previous transform
+                    }
+                }
             } catch (error) {
                 console.error('Error accessing the camera', error);
             }
