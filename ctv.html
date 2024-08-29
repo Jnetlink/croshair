@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera with DSLR-like Grid and Crosshair "X" Overlay</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #000;
+            margin: 0;
+        }
+        #camera-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+        }
+        video {
+            width: 100%;
+            border: 2px solid #333;
+            border-radius: 8px;
+        }
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Prevent overlay from blocking camera interaction */
+        }
+        .grid-line {
+            position: absolute;
+            background-color: rgba(0, 255, 0, 0.5);
+        }
+        /* Garis vertikal */
+        .vertical-line1 {
+            width: 1px;
+            height: 100%;
+            left: 33.33%;
+        }
+        .vertical-line2 {
+            width: 1px;
+            height: 100%;
+            left: 66.66%;
+        }
+        /* Garis horizontal */
+        .horizontal-line1 {
+            height: 1px;
+            width: 100%;
+            top: 33.33%;
+        }
+        .horizontal-line2 {
+            height: 1px;
+            width: 100%;
+            top: 66.66%;
+        }
+        .crosshair {
+            position: absolute;
+            top: 95%;
+            left: 98%;
+            transform: translate(-50%, -50%);
+        }
+        .crosshair-x {
+            position: relative;
+            width: 30px;
+            height: 30px;
+        }
+        .crosshair-x::before,
+        .crosshair-x::after {
+            content: '';
+            position: absolute;
+            background-color: green;
+        }
+        /* Membuat Crosshair berbentuk "X" yang tebal dan tepat di tengah grid */
+        .crosshair-x::before {
+            width: 4px;
+            height: 100%;
+            left: 50%;
+            transform: translateX(-50%) rotate(45deg);
+        }
+        .crosshair-x::after {
+            width: 4px;
+            height: 100%;
+            left: 50%;
+            transform: translateX(-50%) rotate(-45deg);
+        }
+    </style>
+</head>
+<body>
+    <div id="camera-container">
+        <video id="video" autoplay playsinline></video>
+        <div class="overlay">
+            <div class="grid-line vertical-line1"></div>
+            <div class="grid-line vertical-line2"></div>
+            <div class="grid-line horizontal-line1"></div>
+            <div class="grid-line horizontal-line2"></div>
+        </div>
+        <div class="overlay crosshair">
+            <div class="crosshair-x"></div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const constraints = {
+            video: {
+                width: 1280,
+                height: 720,
+            }
+        };
+
+        // Start the video stream from the camera
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
+            } catch (error) {
+                console.error('Error accessing the camera', error);
+            }
+        }
+
+        // Initialize the camera when the page loads
+        window.addEventListener('load', startCamera);
+    </script>
+</body>
+</html>
